@@ -1,0 +1,84 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+  overflow: hidden;
+}
+
+#ui {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 8px;
+  font-size: 18px;
+  letter-spacing: 0.05em;
+}
+
+#ui strong {
+  color: #ffd700;
+}
+
+#gameCanvas {
+  border: 3px solid #4a90e2;
+  border-radius: 4px;
+  display: block;
+  background: #0f3460;
+}
+
+#controls {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 10;
+}
+
+#overlay.hidden {
+  display: none;
+}
+
+#overlayTitle {
+  font-size: 48px;
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+#overlayScore {
+  font-size: 20px;
+  color: #eee;
+}
+
+#restartBtn {
+  padding: 12px 36px;
+  font-size: 18px;
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#restartBtn:hover {
+  background: #357abd;
+}
