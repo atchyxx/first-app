@@ -498,42 +498,80 @@ function render() {
   // 敵（グリーンスライム）
   for (const e of enemies) {
     const ex = e.x, ey = e.y, ew = e.w, eh = e.h;
+    const cx = ex + ew / 2, cy = ey + eh * 0.52;
+    const r  = ew / 2 - 1;
     // 影
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
     ctx.beginPath();
-    ctx.ellipse(ex + ew / 2, ey + eh + 2, ew / 2 - 2, 3, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, ey + eh + 2, r - 2, 4, 0, 0, Math.PI * 2);
     ctx.fill();
-    // ボディ（下半分の四角）
-    ctx.fillStyle = '#38a838';
-    ctx.fillRect(ex + 2, ey + eh * 0.55, ew - 4, eh * 0.45);
-    // ボディ（上半分の丸）
-    ctx.fillStyle = '#50cc50';
+    // まんまる胴体
+    const grad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.25, r * 0.1, cx, cy, r);
+    grad.addColorStop(0, '#a8f0a8');
+    grad.addColorStop(1, '#3db83d');
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(ex + ew / 2, ey + eh * 0.55, ew / 2 - 2, Math.PI, 0);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
-    // 胴体ハイライト
-    ctx.fillStyle = '#70e870';
+    // ほっぺ（赤みのある丸）
+    ctx.fillStyle = 'rgba(255,120,120,0.45)';
     ctx.beginPath();
-    ctx.arc(ex + ew * 0.38, ey + eh * 0.35, ew * 0.12, 0, Math.PI * 2);
+    ctx.arc(cx - r * 0.52, cy + r * 0.22, r * 0.22, 0, Math.PI * 2);
     ctx.fill();
-    // 白目
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.52, cy + r * 0.22, r * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+    // 白目（大きめ丸）
     ctx.fillStyle = '#fff';
-    ctx.fillRect(ex + 5,      ey + eh * 0.3, 9, 9);
-    ctx.fillRect(ex + ew - 14, ey + eh * 0.3, 9, 9);
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.32, cy - r * 0.12, r * 0.26, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.32, cy - r * 0.12, r * 0.26, 0, Math.PI * 2);
+    ctx.fill();
     // 黒目
-    ctx.fillStyle = '#000';
-    ctx.fillRect(ex + 7,      ey + eh * 0.3 + 2, 5, 5);
-    ctx.fillRect(ex + ew - 12, ey + eh * 0.3 + 2, 5, 5);
-    // 眉（怒り）
-    ctx.fillStyle = '#000';
-    ctx.fillRect(ex + 5,       ey + eh * 0.3 - 3, 8, 2);
-    ctx.fillRect(ex + ew - 13, ey + eh * 0.3 - 3, 8, 2);
-    // 口
-    ctx.fillStyle = '#206820';
-    ctx.fillRect(ex + ew / 2 - 5, ey + eh * 0.75, 10, 4);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(ex + ew / 2 - 3, ey + eh * 0.77, 2, 2);
-    ctx.fillRect(ex + ew / 2 + 1, ey + eh * 0.77, 2, 2);
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.30, cy - r * 0.10, r * 0.14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.30, cy - r * 0.10, r * 0.14, 0, Math.PI * 2);
+    ctx.fill();
+    // 瞳ハイライト
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.24, cy - r * 0.17, r * 0.07, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.36, cy - r * 0.17, r * 0.07, 0, Math.PI * 2);
+    ctx.fill();
+    // にっこり口
+    ctx.strokeStyle = '#1a6e1a';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(cx, cy + r * 0.22, r * 0.25, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    // 小さな触角（頭のうえ）
+    ctx.strokeStyle = '#2a8a2a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.18, cy - r * 0.95);
+    ctx.quadraticCurveTo(cx - r * 0.35, cy - r * 1.4, cx - r * 0.28, cy - r * 1.55);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + r * 0.18, cy - r * 0.95);
+    ctx.quadraticCurveTo(cx + r * 0.35, cy - r * 1.4, cx + r * 0.28, cy - r * 1.55);
+    ctx.stroke();
+    ctx.fillStyle = '#3db83d';
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.28, cy - r * 1.55, r * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + r * 0.28, cy - r * 1.55, r * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 1;
   }
 
   // ゴール — 旗ポール（マリオ風）
@@ -589,7 +627,7 @@ function render() {
 
 // ---- ゲーム開始 / 終了 ----
 function startGame() {
-  score = 0; lives = 3; cameraX = 0;
+  score = 0; lives = 10; cameraX = 0;
   scoreEl.textContent = String(score).padStart(6, '0');
   livesEl.textContent = lives;
   gameState = 'playing';
