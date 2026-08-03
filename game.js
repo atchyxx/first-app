@@ -26,6 +26,26 @@ for (let i = 0; i < 220; i++) {
   });
 }
 
+// ---- サイバーパンク都市ビル（決定論的配置）----
+const FAR_TILE = 900;
+const MID_TILE = 780;
+
+const farBuildings = [];
+{ let bx = 0; for (let i = 0; bx < FAR_TILE + 80; i++) {
+    const w = 35 + (i * 53) % 65, h = 90 + (i * 71) % 140;
+    farBuildings.push({x: bx, w, h, accent: i % 3});
+    bx += w + 3 + (i * 13) % 18;
+}}
+
+const midBuildings = [];
+{ let bx = 0; for (let i = 0; bx < MID_TILE + 60; i++) {
+    const w = 24 + (i * 41) % 54, h = 55 + (i * 61) % 88;
+    midBuildings.push({x: bx, w, h, accent: i % 4});
+    bx += w + 2 + (i * 11) % 14;
+}}
+
+let neonTime = 0; // ネオンアニメ用カウンタ
+
 // ---- キー入力 ----
 const keys = {};
 window.addEventListener('keydown', e => { keys[e.code] = true; });
@@ -116,37 +136,52 @@ const player = {
     const bobY = this.onGround && this.vx !== 0 ? Math.abs(legOffset) * 0.3 : 0;
 
     // --- 左脚 ---
-    ctx.fillStyle = '#311b92';
+    ctx.fillStyle = '#0d0d20';
     ctx.beginPath();
     ctx.roundRect(cx - 13, top + 26 + bobY, 10, 16 + legOffset, 3);
     ctx.fill();
     // 左靴
-    ctx.fillStyle = '#ff3d00';
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#00e5ff';
     ctx.beginPath();
     ctx.roundRect(cx - 15, top + 40 + bobY + legOffset, 13, 7, 3);
     ctx.fill();
+    ctx.shadowBlur = 0;
 
     // --- 右脚 ---
-    ctx.fillStyle = '#311b92';
+    ctx.fillStyle = '#0d0d20';
     ctx.beginPath();
     ctx.roundRect(cx + 3, top + 26 + bobY, 10, 16 - legOffset, 3);
     ctx.fill();
     // 右靴
-    ctx.fillStyle = '#ff3d00';
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#00e5ff';
     ctx.beginPath();
     ctx.roundRect(cx + 1, top + 40 + bobY - legOffset, 13, 7, 3);
     ctx.fill();
+    ctx.shadowBlur = 0;
 
-    // --- 胴体（ワンピース風） ---
-    ctx.fillStyle = '#ff85a2';
+    // --- 胴体（ダークジャケット） ---
+    ctx.fillStyle = '#1a0028';
     ctx.beginPath();
     ctx.roundRect(cx - 13, top + 14 + bobY, 26, 18, 5);
     ctx.fill();
-    // 襟
-    ctx.fillStyle = '#fff';
+    // マゼンタネオンジッパーライン
+    ctx.strokeStyle = '#ff00cc';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(cx, top + 15 + bobY, 5, Math.PI, 0);
-    ctx.fill();
+    ctx.moveTo(cx, top + 14 + bobY);
+    ctx.lineTo(cx, top + 32 + bobY);
+    ctx.stroke();
+    // ショルダーライン
+    ctx.strokeStyle = 'rgba(255,0,200,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - 13, top + 16 + bobY);
+    ctx.lineTo(cx + 13, top + 16 + bobY);
+    ctx.stroke();
 
     // --- 左腕 ---
     const armSwing = this.onGround ? legOffset * 0.6 : 0;
@@ -176,7 +211,9 @@ const player = {
     ctx.fill();
 
     // --- 髪 (お団子ツインテール) ---
-    ctx.fillStyle = '#c0392b';
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = '#00e5ff';
     // 左お団子
     ctx.beginPath();
     ctx.arc(cx - 10, top, 6, 0, Math.PI * 2);
@@ -189,6 +226,7 @@ const player = {
     ctx.beginPath();
     ctx.ellipse(cx, top + 2, 12, 7, 0, Math.PI, 0);
     ctx.fill();
+    ctx.shadowBlur = 0;
 
     // --- 目（大きなキラキラ目） ---
     // 白目
@@ -205,12 +243,12 @@ const player = {
     ctx.beginPath(); ctx.arc(cx + 6, top + 8, 1, 0, Math.PI * 2); ctx.fill();
 
     // --- ほっぺ ---
-    ctx.fillStyle = 'rgba(255, 150, 150, 0.5)';
+    ctx.fillStyle = 'rgba(0, 200, 255, 0.28)';
     ctx.beginPath(); ctx.ellipse(cx - 8, top + 13, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(cx + 8, top + 13, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
 
     // --- 口（笑顔） ---
-    ctx.strokeStyle = '#c0392b';
+    ctx.strokeStyle = '#00e5ff';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(cx, top + 13, 3, 0.2, Math.PI - 0.2);
@@ -224,6 +262,17 @@ const player = {
 function collideRect(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x &&
          a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+// ---- 六角形パス（ホログラムコイン用）----
+function drawHexPath(x, y, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (i * Math.PI) / 3 - Math.PI / 6;
+    if (i === 0) ctx.moveTo(x + r * Math.cos(a), y + r * Math.sin(a));
+    else         ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
+  }
+  ctx.closePath();
 }
 
 // ---- ステージ生成 ----
@@ -299,61 +348,82 @@ function updateCamera() {
 
 // ---- 背景描画 ----
 function drawBackground() {
-  // 宇宙紫グラデーション
-  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  grad.addColorStop(0,    '#090420');
-  grad.addColorStop(0.55, '#1a0a4e');
-  grad.addColorStop(1,    '#2a0d60');
-  ctx.fillStyle = grad;
+  // 漆黒の夜
+  ctx.fillStyle = '#000510';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 星（超低速視差）
+  // 薄い星（都市の光害で暗め）
   for (const s of stars) {
-    const sx = ((s.x - cameraX * 0.05) % canvas.width + canvas.width) % canvas.width;
-    ctx.fillStyle = `rgba(255,255,255,${(0.35 + s.r * 0.3).toFixed(2)})`;
+    const sx = ((s.x - cameraX * 0.02) % canvas.width + canvas.width) % canvas.width;
+    ctx.fillStyle = `rgba(160,210,255,${(0.08 + s.r * 0.1).toFixed(2)})`;
     ctx.beginPath();
-    ctx.arc(sx, s.y, s.r, 0, Math.PI * 2);
+    ctx.arc(sx, s.y * 0.5, s.r * 0.45, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // 遠景の丘（0.15x視差）
-  ctx.fillStyle = '#1a0845';
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height);
-  for (let x = 0; x <= canvas.width; x += 12) {
-    const wx = x + cameraX * 0.15;
-    ctx.lineTo(x, 318 + Math.sin(wx * 0.003) * 55 + Math.sin(wx * 0.007) * 28);
+  // 遠景ビル（0.1x 視差）
+  const farOff = (cameraX * 0.1) % FAR_TILE;
+  for (const b of farBuildings) {
+    for (const shift of [0, FAR_TILE]) {
+      const bx = b.x - farOff + shift;
+      if (bx + b.w < -2 || bx > canvas.width + 2) continue;
+      ctx.fillStyle = '#070714';
+      ctx.fillRect(bx, canvas.height - b.h, b.w, b.h);
+      const wCol = b.accent === 0 ? 'rgba(0,230,255,0.18)' : 'rgba(255,180,0,0.12)';
+      for (let wy = canvas.height - b.h + 8; wy < canvas.height - 5; wy += 16) {
+        for (let wx = bx + 5; wx < bx + b.w - 3; wx += 11) {
+          if (((wx - bx) / 11 + (canvas.height - wy) / 16 + b.x) % 4 !== 0) {
+            ctx.fillStyle = wCol;
+            ctx.fillRect(wx, wy, 5, 7);
+          }
+        }
+      }
+      if (b.accent === 1) {
+        ctx.strokeStyle = `rgba(255,0,200,${0.22 + Math.sin(neonTime * 0.05 + b.x) * 0.1})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx, canvas.height - b.h);
+        ctx.lineTo(bx + b.w, canvas.height - b.h);
+        ctx.stroke();
+      }
+    }
   }
-  ctx.lineTo(canvas.width, canvas.height);
-  ctx.closePath();
-  ctx.fill();
 
-  // 中景の丘（0.25x視差）
-  ctx.fillStyle = '#230e58';
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height);
-  for (let x = 0; x <= canvas.width; x += 12) {
-    const wx = x + cameraX * 0.25;
-    ctx.lineTo(x, 352 + Math.sin(wx * 0.005 + 1.5) * 38 + Math.sin(wx * 0.011) * 18);
+  // 中景ビル（0.25x 視差）
+  const midOff = (cameraX * 0.25) % MID_TILE;
+  for (const b of midBuildings) {
+    for (const shift of [0, MID_TILE]) {
+      const bx = b.x - midOff + shift;
+      if (bx + b.w < -2 || bx > canvas.width + 2) continue;
+      ctx.fillStyle = '#0d0d22';
+      ctx.fillRect(bx, canvas.height - b.h, b.w, b.h);
+      if (b.accent === 0) {
+        ctx.strokeStyle = `rgba(0,255,200,${0.18 + Math.sin(neonTime * 0.04 + b.x * 0.1) * 0.08})`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx + 0.5, canvas.height - b.h + 0.5, b.w - 1, b.h - 1);
+      } else if (b.accent === 2) {
+        ctx.strokeStyle = `rgba(255,0,180,${0.18 + Math.cos(neonTime * 0.03 + b.x * 0.1) * 0.08})`;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx + 0.5, canvas.height - b.h + 0.5, b.w - 1, b.h - 1);
+      }
+      for (let wy = canvas.height - b.h + 5; wy < canvas.height - 3; wy += 12) {
+        for (let wx = bx + 4; wx < bx + b.w - 2; wx += 9) {
+          if (((wx - bx) / 9 + (canvas.height - wy) / 12 + b.x) % 3 !== 0) {
+            ctx.fillStyle = b.accent === 0 ? 'rgba(0,255,200,0.14)' : 'rgba(255,80,200,0.11)';
+            ctx.fillRect(wx, wy, 4, 5);
+          }
+        }
+      }
+    }
   }
-  ctx.lineTo(canvas.width, canvas.height);
-  ctx.closePath();
-  ctx.fill();
 
-  // 雲（ネビュラ風・0.3x視差）
-  const cloudDefs = [
-    {x: 150, y: 55, w: 180, h: 55}, {x: 480, y: 38, w: 220, h: 65},
-    {x: 780, y: 70, w: 160, h: 50}, {x: 1100, y: 45, w: 200, h: 58},
-    {x: 1450, y: 60, w: 170, h: 52},
-  ];
-  for (const c of cloudDefs) {
-    const cx = ((c.x - cameraX * 0.3) % (canvas.width + c.w) + canvas.width + c.w) % (canvas.width + c.w) - c.w / 2;
-    ctx.fillStyle = 'rgba(140,80,255,0.12)';
-    ctx.beginPath(); ctx.ellipse(cx, c.y, c.w / 2, c.h / 2, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(200,160,255,0.08)';
-    ctx.beginPath(); ctx.ellipse(cx - c.w * 0.22, c.y + c.h * 0.1, c.w * 0.38, c.h * 0.48, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + c.w * 0.22, c.y + c.h * 0.1, c.w * 0.38, c.h * 0.48, 0, 0, Math.PI * 2); ctx.fill();
-  }
+  // 地面のネオン反射
+  const groundGlow = ctx.createLinearGradient(0, canvas.height - 70, 0, canvas.height);
+  groundGlow.addColorStop(0, 'rgba(0,0,0,0)');
+  groundGlow.addColorStop(1, 'rgba(0,30,60,0.45)');
+  ctx.fillStyle = groundGlow;
+  ctx.fillRect(0, canvas.height - 70, canvas.width, 70);
+  ctx.lineWidth = 1;
 }
 
 // ---- メインループ ----
@@ -366,6 +436,7 @@ function gameLoop() {
 }
 
 function update() {
+  neonTime++;
   player.update();
   updateCamera();
 
@@ -418,177 +489,170 @@ function render() {
   // プラットフォーム
   for (const p of platforms) {
     if (p.h > 20) {
-      // 地面 — 土ボディ
-      ctx.fillStyle = '#4a2c0a';
-      ctx.fillRect(p.x, p.y + 9, p.w, p.h - 9);
-      ctx.fillStyle = '#6b3d12';
-      ctx.fillRect(p.x, p.y + 9, p.w, 4);
-      // 草の層
-      ctx.fillStyle = '#2e7d32';
-      ctx.fillRect(p.x, p.y, p.w, 10);
-      ctx.fillStyle = '#66bb6a';
-      ctx.fillRect(p.x, p.y, p.w, 4);
-      // 草の葉
-      ctx.fillStyle = '#43a047';
-      for (let gx = p.x + 6; gx < p.x + p.w - 4; gx += 14) {
-        ctx.beginPath();
-        ctx.moveTo(gx, p.y);
-        ctx.lineTo(gx - 3, p.y - 6);
-        ctx.lineTo(gx + 3, p.y - 6);
-        ctx.closePath();
-        ctx.fill();
-      }
-    } else {
-      // 空中ブロック — グラデーション紫
-      const pg = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
-      pg.addColorStop(0,   '#ce93d8');
-      pg.addColorStop(0.4, '#9c27b0');
-      pg.addColorStop(1,   '#6a0080');
-      ctx.fillStyle = pg;
+      // 地面 — アスファルト
+      ctx.fillStyle = '#0e0e1c';
       ctx.fillRect(p.x, p.y, p.w, p.h);
-      // 上端ハイライト
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      ctx.fillRect(p.x, p.y, p.w, 3);
-      // 下端シャドウ
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      ctx.fillRect(p.x, p.y + p.h - 2, p.w, 2);
-      // ブロック区切り線
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-      ctx.lineWidth = 1;
-      for (let bx = p.x + 30; bx < p.x + p.w; bx += 30) {
-        ctx.beginPath(); ctx.moveTo(bx, p.y + 1); ctx.lineTo(bx, p.y + p.h - 1); ctx.stroke();
+      ctx.fillStyle = '#15152a';
+      ctx.fillRect(p.x, p.y, p.w, 4);
+      // 黄色いレーンライン
+      ctx.fillStyle = '#FFD600';
+      for (let lx = p.x + 16; lx < p.x + p.w - 16; lx += 44) {
+        ctx.fillRect(lx, p.y + 12, 22, 3);
       }
+      // 上端シアングロー
+      ctx.fillStyle = 'rgba(0,230,255,0.18)';
+      ctx.fillRect(p.x, p.y, p.w, 2);
+    } else {
+      // 空中プラットフォーム — ダークグリッド＋ネオン縁取り
+      ctx.fillStyle = '#080818';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.strokeStyle = 'rgba(0,200,255,0.12)';
+      ctx.lineWidth = 1;
+      for (let gx = p.x + 16; gx < p.x + p.w; gx += 16) {
+        ctx.beginPath(); ctx.moveTo(gx, p.y); ctx.lineTo(gx, p.y + p.h); ctx.stroke();
+      }
+      const isCyan = Math.floor(p.x * 0.01) % 2 === 0;
+      const neonAlpha = 0.6 + Math.sin(neonTime * 0.06 + p.x * 0.008) * 0.2;
+      ctx.strokeStyle = isCyan ? `rgba(0,230,255,${neonAlpha})` : `rgba(255,0,200,${neonAlpha})`;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(p.x + 0.75, p.y + 0.75, p.w - 1.5, p.h - 1.5);
+      const col = isCyan ? '0,230,255' : '255,0,200';
+      const eg = ctx.createLinearGradient(0, p.y - 5, 0, p.y + 5);
+      eg.addColorStop(0, `rgba(${col},0)`);
+      eg.addColorStop(0.5, `rgba(${col},0.25)`);
+      eg.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = eg;
+      ctx.fillRect(p.x - 2, p.y - 5, p.w + 4, 10);
     }
   }
+  ctx.lineWidth = 1;
 
-  // コイン
+  // コイン（ホログラム六角形）
   for (const c of coins) {
     if (c.collected) continue;
     const bounce = Math.sin(c.anim) * 3;
     const ccx = c.x + c.w / 2;
     const ccy = c.y + c.h / 2 + bounce;
     const cr  = c.w / 2;
-    // グロー
-    const glow = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, cr * 2.4);
-    glow.addColorStop(0, 'rgba(255,220,0,0.38)');
-    glow.addColorStop(1, 'rgba(255,165,0,0)');
+    const glow = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, cr * 2.6);
+    glow.addColorStop(0, 'rgba(0,255,255,0.32)');
+    glow.addColorStop(1, 'rgba(0,100,200,0)');
     ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.arc(ccx, ccy, cr * 2.4, 0, Math.PI * 2); ctx.fill();
-    // 外周リング
-    ctx.fillStyle = '#FFC107';
-    ctx.beginPath(); ctx.arc(ccx, ccy, cr, 0, Math.PI * 2); ctx.fill();
-    // 中間リング
-    ctx.fillStyle = '#FF8F00';
-    ctx.beginPath(); ctx.arc(ccx, ccy, cr - 2, 0, Math.PI * 2); ctx.fill();
-    // 中央
-    ctx.fillStyle = '#FFD54F';
-    ctx.beginPath(); ctx.arc(ccx, ccy, cr - 4, 0, Math.PI * 2); ctx.fill();
-    // シャイン
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.beginPath(); ctx.arc(ccx - 2, ccy - 2, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(ccx, ccy, cr * 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.translate(ccx, ccy);
+    ctx.rotate(c.anim * 0.5);
+    ctx.fillStyle = '#001830';
+    drawHexPath(0, 0, cr);
+    ctx.fill();
+    ctx.fillStyle = '#003355';
+    drawHexPath(0, 0, cr - 2);
+    ctx.fill();
+    ctx.fillStyle = '#00e5ff';
+    drawHexPath(0, 0, cr - 4);
+    ctx.fill();
+    const hexAlpha = 0.75 + Math.sin(c.anim * 2) * 0.25;
+    ctx.strokeStyle = `rgba(0,255,255,${hexAlpha})`;
+    ctx.lineWidth = 1.5;
+    drawHexPath(0, 0, cr);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.beginPath(); ctx.arc(ccx - 1, ccy - 2, 1.5, 0, Math.PI * 2); ctx.fill();
   }
+  ctx.lineWidth = 1;
 
-  // 敵
+  // 敵（サイバーロボット）
   for (const e of enemies) {
     const ex = e.x, ey = e.y, ew = e.w, eh = e.h;
-    // 影
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillStyle = 'rgba(255,0,80,0.12)';
     ctx.beginPath();
-    ctx.ellipse(ex + ew / 2, ey + eh + 3, ew / 2 - 1, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(ex + ew / 2, ey + eh + 3, ew / 2, 3, 0, 0, Math.PI * 2);
     ctx.fill();
-    // ツノ
-    ctx.fillStyle = '#4a148c';
-    ctx.beginPath();
-    ctx.moveTo(ex + 8,  ey + 6); ctx.lineTo(ex + 5,       ey - 7); ctx.lineTo(ex + 14,      ey + 4); ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(ex + ew - 8, ey + 6); ctx.lineTo(ex + ew - 5, ey - 7); ctx.lineTo(ex + ew - 14, ey + 4); ctx.fill();
-    // ボディ（ラジアルグラデーション）
-    const eg = ctx.createRadialGradient(ex + ew * 0.35, ey + eh * 0.35, 2, ex + ew / 2, ey + eh / 2, ew * 0.75);
-    eg.addColorStop(0, '#ef5350');
-    eg.addColorStop(1, '#b71c1c');
-    ctx.fillStyle = eg;
-    ctx.beginPath();
-    ctx.roundRect(ex + 2, ey + 4, ew - 4, eh - 2, [8, 8, 6, 6]);
-    ctx.fill();
-    // 白目
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.ellipse(ex + 10,      ey + 14, 5.5, 5.5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(ex + ew - 10, ey + 14, 5.5, 5.5, 0, 0, Math.PI * 2); ctx.fill();
-    // 黒目
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath(); ctx.arc(ex + 10,      ey + 15, 3.5, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ex + ew - 10, ey + 15, 3.5, 0, Math.PI * 2); ctx.fill();
-    // キラキラ
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(ex + 11,      ey + 13, 1.2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ex + ew - 9,  ey + 13, 1.2, 0, Math.PI * 2); ctx.fill();
-    // 怒り眉
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#ff0055';
+    ctx.lineWidth = 1.5;
     ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(ex + 5,      ey + 8); ctx.lineTo(ex + 14,      ey + 11); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(ex + ew - 5, ey + 8); ctx.lineTo(ex + ew - 14, ey + 11); ctx.stroke();
-    // 口とキバ
-    ctx.fillStyle = '#4a0000';
     ctx.beginPath();
-    ctx.arc(ex + ew / 2, ey + eh - 5, 7, 0.15, Math.PI - 0.15);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(ex + ew / 2 - 6, ey + eh - 8, 4, 6);
-    ctx.fillRect(ex + ew / 2 + 2, ey + eh - 8, 4, 6);
-    // 足
-    ctx.fillStyle = '#7b1fa2';
-    ctx.beginPath(); ctx.roundRect(ex + 3,       ey + eh - 2, 11, 7, [2, 2, 4, 4]); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(ex + ew - 14, ey + eh - 2, 11, 7, [2, 2, 4, 4]); ctx.fill();
+    ctx.moveTo(ex + ew / 2, ey + 4);
+    ctx.lineTo(ex + ew / 2, ey - 9);
+    ctx.stroke();
+    const antAlpha = 0.5 + Math.sin(neonTime * 0.18) * 0.5;
+    ctx.fillStyle = `rgba(255,0,80,${antAlpha})`;
+    ctx.beginPath(); ctx.arc(ex + ew / 2, ey - 10, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#12122a';
+    ctx.fillRect(ex + 4, ey + 2, ew - 8, 14);
+    ctx.strokeStyle = '#ff0055';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ex + 4, ey + 2, ew - 8, 14);
+    const eyeAlpha = 0.7 + Math.sin(neonTime * 0.15) * 0.3;
+    ctx.fillStyle = `rgba(255,0,80,${eyeAlpha})`;
+    ctx.fillRect(ex + 7,       ey + 7, 8, 4);
+    ctx.fillRect(ex + ew - 15, ey + 7, 8, 4);
+    ctx.fillStyle = `rgba(255,80,80,${eyeAlpha * 0.6})`;
+    ctx.fillRect(ex + 6,       ey + 6, 10, 6);
+    ctx.fillRect(ex + ew - 16, ey + 6, 10, 6);
+    ctx.fillStyle = '#111128';
+    ctx.fillRect(ex + 2, ey + 16, ew - 4, 12);
+    ctx.strokeStyle = '#ff0055';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ex + 2, ey + 16, ew - 4, 12);
+    ctx.beginPath();
+    ctx.moveTo(ex + ew / 2, ey + 16);
+    ctx.lineTo(ex + ew / 2, ey + 28);
+    ctx.stroke();
+    const chestAlpha = 0.5 + Math.sin(neonTime * 0.2) * 0.5;
+    ctx.fillStyle = `rgba(255,0,80,${chestAlpha})`;
+    ctx.beginPath(); ctx.arc(ex + ew / 2, ey + 22, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#12122a';
+    ctx.fillRect(ex + 4,       ey + 28, 10, 8);
+    ctx.fillRect(ex + ew - 14, ey + 28, 10, 8);
+    ctx.fillStyle = '#cc0044';
+    ctx.fillRect(ex + 2,       ey + 34, 14, 4);
+    ctx.fillRect(ex + ew - 16, ey + 34, 14, 4);
   }
   ctx.lineWidth = 1;
   ctx.lineCap = 'butt';
 
-  // ゴールフラグ
-  // 金属ポール
-  const poleGrad = ctx.createLinearGradient(goal.x, 0, goal.x + 8, 0);
-  poleGrad.addColorStop(0,   '#9e9e9e');
-  poleGrad.addColorStop(0.5, '#ffffff');
-  poleGrad.addColorStop(1,   '#757575');
-  ctx.fillStyle = poleGrad;
-  ctx.fillRect(goal.x, goal.y, 8, goal.h);
-  // ポール頂点の星
-  ctx.save();
-  ctx.fillStyle = '#FFD700';
-  ctx.strokeStyle = '#FF8F00';
+  // ゴール — EXIT ネオンサイン
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(goal.x + 2, goal.y, 5, goal.h);
+  ctx.fillStyle = 'rgba(100,100,180,0.4)';
+  ctx.fillRect(goal.x + 3, goal.y, 2, goal.h);
+  const signW = 72, signH = 38;
+  const signX = goal.x - 12, signY = goal.y + 8;
+  ctx.fillStyle = '#04041a';
+  ctx.fillRect(signX, signY, signW, signH);
+  const exitF = 0.65 + Math.sin(neonTime * 0.13) * 0.35;
+  ctx.strokeStyle = `rgba(255,0,200,${exitF})`;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(signX + 1, signY + 1, signW - 2, signH - 2);
+  ctx.strokeStyle = `rgba(0,230,255,${exitF * 0.5})`;
   ctx.lineWidth = 1;
-  ctx.translate(goal.x + 4, goal.y - 12);
-  ctx.beginPath();
-  for (let i = 0; i < 5; i++) {
-    const a1 = (i * 4 - 1) * Math.PI / 5 - Math.PI / 2;
-    const a2 = (i * 4 + 1) * Math.PI / 5 - Math.PI / 2;
-    ctx.lineTo(Math.cos(a1) * 10, Math.sin(a1) * 10);
-    ctx.lineTo(Math.cos(a2) *  4, Math.sin(a2) *  4);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-  // チェッカーフラッグ
-  const cellSize = 8;
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 5; col++) {
-      ctx.fillStyle = (row + col) % 2 === 0 ? '#f5f5f5' : '#212121';
-      ctx.fillRect(goal.x + 8 + col * cellSize, goal.y + row * cellSize, cellSize, cellSize);
-    }
-  }
-  ctx.strokeStyle = '#9e9e9e';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(goal.x + 8, goal.y, 5 * cellSize, 4 * cellSize);
-  // "GOAL" ラベル
+  ctx.strokeRect(signX + 4, signY + 4, signW - 8, signH - 8);
   ctx.save();
-  ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 14px sans-serif';
+  ctx.fillStyle = `rgba(255,0,220,${exitF})`;
+  ctx.font = 'bold 18px "Courier New", monospace';
   ctx.textAlign = 'center';
-  ctx.shadowColor = '#000';
-  ctx.shadowBlur = 5;
-  ctx.fillText('GOAL', goal.x + 8 + 5 * cellSize / 2, goal.y + 4 * cellSize + 16);
+  ctx.shadowColor = '#ff00cc';
+  ctx.shadowBlur = 12 + Math.sin(neonTime * 0.13) * 6;
+  ctx.fillText('EXIT', signX + signW / 2, signY + signH / 2 + 7);
   ctx.restore();
+  const arrowX = signX + signW + 4;
+  const arrowY = signY + signH / 2;
+  const arrowA = 0.55 + Math.cos(neonTime * 0.1) * 0.3;
+  ctx.strokeStyle = `rgba(0,230,255,${arrowA})`;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(arrowX,      arrowY);
+  ctx.lineTo(arrowX + 12, arrowY);
+  ctx.moveTo(arrowX + 6,  arrowY - 5);
+  ctx.lineTo(arrowX + 12, arrowY);
+  ctx.lineTo(arrowX + 6,  arrowY + 5);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'butt';
 
   ctx.restore();
 
