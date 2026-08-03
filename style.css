@@ -16,16 +16,45 @@ body {
   overflow: hidden;
 }
 
+#game-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 #ui {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
   display: flex;
-  gap: 32px;
-  margin-bottom: 8px;
-  font-size: 18px;
-  letter-spacing: 0.05em;
+  gap: 24px;
+  padding: 8px 28px;
+  background: rgba(0, 0, 20, 0.72);
+  border: 1px solid rgba(180, 100, 255, 0.45);
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: #ccc;
 }
 
 #ui strong {
-  color: #ffd700;
+  font-size: 30px;
+  font-weight: 900;
+  color: #FFD700;
+  letter-spacing: 0.08em;
+  text-shadow:
+    0 0 8px  rgba(255, 215, 0, 0.9),
+    0 0 18px rgba(255, 165, 0, 0.6),
+    0 0 32px rgba(255, 100, 0, 0.3);
 }
 
 #gameCanvas {

@@ -116,23 +116,23 @@ const player = {
     const bobY = this.onGround && this.vx !== 0 ? Math.abs(legOffset) * 0.3 : 0;
 
     // --- 左脚 ---
-    ctx.fillStyle = '#5b3fa0';
+    ctx.fillStyle = '#311b92';
     ctx.beginPath();
     ctx.roundRect(cx - 13, top + 26 + bobY, 10, 16 + legOffset, 3);
     ctx.fill();
     // 左靴
-    ctx.fillStyle = '#e74c3c';
+    ctx.fillStyle = '#ff3d00';
     ctx.beginPath();
     ctx.roundRect(cx - 15, top + 40 + bobY + legOffset, 13, 7, 3);
     ctx.fill();
 
     // --- 右脚 ---
-    ctx.fillStyle = '#5b3fa0';
+    ctx.fillStyle = '#311b92';
     ctx.beginPath();
     ctx.roundRect(cx + 3, top + 26 + bobY, 10, 16 - legOffset, 3);
     ctx.fill();
     // 右靴
-    ctx.fillStyle = '#e74c3c';
+    ctx.fillStyle = '#ff3d00';
     ctx.beginPath();
     ctx.roundRect(cx + 1, top + 40 + bobY - legOffset, 13, 7, 3);
     ctx.fill();
@@ -465,42 +465,130 @@ function render() {
   for (const c of coins) {
     if (c.collected) continue;
     const bounce = Math.sin(c.anim) * 3;
-    ctx.fillStyle = '#ffd700';
-    ctx.beginPath();
-    ctx.arc(c.x + c.w/2, c.y + c.h/2 + bounce, c.w/2, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 10px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('$', c.x + c.w/2, c.y + c.h/2 + 4 + bounce);
+    const ccx = c.x + c.w / 2;
+    const ccy = c.y + c.h / 2 + bounce;
+    const cr  = c.w / 2;
+    // グロー
+    const glow = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, cr * 2.4);
+    glow.addColorStop(0, 'rgba(255,220,0,0.38)');
+    glow.addColorStop(1, 'rgba(255,165,0,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(ccx, ccy, cr * 2.4, 0, Math.PI * 2); ctx.fill();
+    // 外周リング
+    ctx.fillStyle = '#FFC107';
+    ctx.beginPath(); ctx.arc(ccx, ccy, cr, 0, Math.PI * 2); ctx.fill();
+    // 中間リング
+    ctx.fillStyle = '#FF8F00';
+    ctx.beginPath(); ctx.arc(ccx, ccy, cr - 2, 0, Math.PI * 2); ctx.fill();
+    // 中央
+    ctx.fillStyle = '#FFD54F';
+    ctx.beginPath(); ctx.arc(ccx, ccy, cr - 4, 0, Math.PI * 2); ctx.fill();
+    // シャイン
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.beginPath(); ctx.arc(ccx - 2, ccy - 2, 2, 0, Math.PI * 2); ctx.fill();
   }
 
   // 敵
   for (const e of enemies) {
-    ctx.fillStyle = e.color;
-    ctx.fillRect(e.x, e.y, e.w, e.h);
-    // 目
-    ctx.fillStyle = '#c0392b';
-    ctx.fillRect(e.x + 6,  e.y + 6,  8, 8);
-    ctx.fillRect(e.x + 22, e.y + 6,  8, 8);
+    const ex = e.x, ey = e.y, ew = e.w, eh = e.h;
+    // 影
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(ex + ew / 2, ey + eh + 3, ew / 2 - 1, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // ツノ
+    ctx.fillStyle = '#4a148c';
+    ctx.beginPath();
+    ctx.moveTo(ex + 8,  ey + 6); ctx.lineTo(ex + 5,       ey - 7); ctx.lineTo(ex + 14,      ey + 4); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(ex + ew - 8, ey + 6); ctx.lineTo(ex + ew - 5, ey - 7); ctx.lineTo(ex + ew - 14, ey + 4); ctx.fill();
+    // ボディ（ラジアルグラデーション）
+    const eg = ctx.createRadialGradient(ex + ew * 0.35, ey + eh * 0.35, 2, ex + ew / 2, ey + eh / 2, ew * 0.75);
+    eg.addColorStop(0, '#ef5350');
+    eg.addColorStop(1, '#b71c1c');
+    ctx.fillStyle = eg;
+    ctx.beginPath();
+    ctx.roundRect(ex + 2, ey + 4, ew - 4, eh - 2, [8, 8, 6, 6]);
+    ctx.fill();
+    // 白目
     ctx.fillStyle = '#fff';
-    ctx.fillRect(e.x + 8,  e.y + 8,  4, 4);
-    ctx.fillRect(e.x + 24, e.y + 8,  4, 4);
+    ctx.beginPath(); ctx.ellipse(ex + 10,      ey + 14, 5.5, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ex + ew - 10, ey + 14, 5.5, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+    // 黒目
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.arc(ex + 10,      ey + 15, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(ex + ew - 10, ey + 15, 3.5, 0, Math.PI * 2); ctx.fill();
+    // キラキラ
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(ex + 11,      ey + 13, 1.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(ex + ew - 9,  ey + 13, 1.2, 0, Math.PI * 2); ctx.fill();
+    // 怒り眉
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ex + 5,      ey + 8); ctx.lineTo(ex + 14,      ey + 11); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ex + ew - 5, ey + 8); ctx.lineTo(ex + ew - 14, ey + 11); ctx.stroke();
+    // 口とキバ
+    ctx.fillStyle = '#4a0000';
+    ctx.beginPath();
+    ctx.arc(ex + ew / 2, ey + eh - 5, 7, 0.15, Math.PI - 0.15);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(ex + ew / 2 - 6, ey + eh - 8, 4, 6);
+    ctx.fillRect(ex + ew / 2 + 2, ey + eh - 8, 4, 6);
+    // 足
+    ctx.fillStyle = '#7b1fa2';
+    ctx.beginPath(); ctx.roundRect(ex + 3,       ey + eh - 2, 11, 7, [2, 2, 4, 4]); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(ex + ew - 14, ey + eh - 2, 11, 7, [2, 2, 4, 4]); ctx.fill();
   }
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'butt';
 
   // ゴールフラグ
-  ctx.fillStyle = '#e74c3c';
-  ctx.fillRect(goal.x, goal.y, 6, goal.h);
-  ctx.fillStyle = '#e74c3c';
+  // 金属ポール
+  const poleGrad = ctx.createLinearGradient(goal.x, 0, goal.x + 8, 0);
+  poleGrad.addColorStop(0,   '#9e9e9e');
+  poleGrad.addColorStop(0.5, '#ffffff');
+  poleGrad.addColorStop(1,   '#757575');
+  ctx.fillStyle = poleGrad;
+  ctx.fillRect(goal.x, goal.y, 8, goal.h);
+  // ポール頂点の星
+  ctx.save();
+  ctx.fillStyle = '#FFD700';
+  ctx.strokeStyle = '#FF8F00';
+  ctx.lineWidth = 1;
+  ctx.translate(goal.x + 4, goal.y - 12);
   ctx.beginPath();
-  ctx.moveTo(goal.x + 6, goal.y);
-  ctx.lineTo(goal.x + 40, goal.y + 15);
-  ctx.lineTo(goal.x + 6,  goal.y + 30);
+  for (let i = 0; i < 5; i++) {
+    const a1 = (i * 4 - 1) * Math.PI / 5 - Math.PI / 2;
+    const a2 = (i * 4 + 1) * Math.PI / 5 - Math.PI / 2;
+    ctx.lineTo(Math.cos(a1) * 10, Math.sin(a1) * 10);
+    ctx.lineTo(Math.cos(a2) *  4, Math.sin(a2) *  4);
+  }
+  ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = '#f1c40f';
-  ctx.font = 'bold 13px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('GOAL', goal.x + 10, goal.y + 18);
+  ctx.stroke();
+  ctx.restore();
+  // チェッカーフラッグ
+  const cellSize = 8;
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 5; col++) {
+      ctx.fillStyle = (row + col) % 2 === 0 ? '#f5f5f5' : '#212121';
+      ctx.fillRect(goal.x + 8 + col * cellSize, goal.y + row * cellSize, cellSize, cellSize);
+    }
+  }
+  ctx.strokeStyle = '#9e9e9e';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(goal.x + 8, goal.y, 5 * cellSize, 4 * cellSize);
+  // "GOAL" ラベル
+  ctx.save();
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = '#000';
+  ctx.shadowBlur = 5;
+  ctx.fillText('GOAL', goal.x + 8 + 5 * cellSize / 2, goal.y + 4 * cellSize + 16);
+  ctx.restore();
 
   ctx.restore();
 

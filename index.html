@@ -7,11 +7,13 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="ui">
-    <span>スコア: <strong id="score">0</strong></span>
-    <span>残機: <strong id="lives">3</strong></span>
+  <div id="game-wrapper">
+    <div id="ui">
+      <span class="hud-item">🏆 <strong id="score">0</strong></span>
+      <span class="hud-item">LIFE <strong id="lives">3</strong></span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
   </div>
-  <canvas id="gameCanvas"></canvas>
   <div id="overlay" class="hidden">
     <h1 id="overlayTitle">ゲームオーバー</h1>
     <p id="overlayScore"></p>
