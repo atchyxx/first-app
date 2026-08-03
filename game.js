@@ -16,6 +16,16 @@ const JUMP_FORCE = -11;
 const PLAYER_SPEED = 4;
 const WORLD_WIDTH = 4000;
 
+// 星（決定論的配置）
+const stars = [];
+for (let i = 0; i < 220; i++) {
+  stars.push({
+    x: (i * 2731 + 500) % WORLD_WIDTH,
+    y: (i * 1019 + 80)  % 290,
+    r: (i % 5) * 0.28 + 0.4,
+  });
+}
+
 // ---- キー入力 ----
 const keys = {};
 window.addEventListener('keydown', e => { keys[e.code] = true; });
@@ -289,21 +299,60 @@ function updateCamera() {
 
 // ---- 背景描画 ----
 function drawBackground() {
-  // 空グラデーション
+  // 宇宙紫グラデーション
   const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  grad.addColorStop(0, '#0f3460');
-  grad.addColorStop(1, '#16213e');
+  grad.addColorStop(0,    '#090420');
+  grad.addColorStop(0.55, '#1a0a4e');
+  grad.addColorStop(1,    '#2a0d60');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 雲（視差スクロール）
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  const clouds = [{x:200,y:60,w:160,h:50},{x:600,y:40,w:200,h:60},{x:1100,y:80,w:140,h:45}];
-  for (const c of clouds) {
-    const cx = ((c.x - cameraX * 0.3) % WORLD_WIDTH + WORLD_WIDTH) % WORLD_WIDTH;
+  // 星（超低速視差）
+  for (const s of stars) {
+    const sx = ((s.x - cameraX * 0.05) % canvas.width + canvas.width) % canvas.width;
+    ctx.fillStyle = `rgba(255,255,255,${(0.35 + s.r * 0.3).toFixed(2)})`;
     ctx.beginPath();
-    ctx.ellipse(cx % canvas.width, c.y, c.w/2, c.h/2, 0, 0, Math.PI*2);
+    ctx.arc(sx, s.y, s.r, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // 遠景の丘（0.15x視差）
+  ctx.fillStyle = '#1a0845';
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height);
+  for (let x = 0; x <= canvas.width; x += 12) {
+    const wx = x + cameraX * 0.15;
+    ctx.lineTo(x, 318 + Math.sin(wx * 0.003) * 55 + Math.sin(wx * 0.007) * 28);
+  }
+  ctx.lineTo(canvas.width, canvas.height);
+  ctx.closePath();
+  ctx.fill();
+
+  // 中景の丘（0.25x視差）
+  ctx.fillStyle = '#230e58';
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height);
+  for (let x = 0; x <= canvas.width; x += 12) {
+    const wx = x + cameraX * 0.25;
+    ctx.lineTo(x, 352 + Math.sin(wx * 0.005 + 1.5) * 38 + Math.sin(wx * 0.011) * 18);
+  }
+  ctx.lineTo(canvas.width, canvas.height);
+  ctx.closePath();
+  ctx.fill();
+
+  // 雲（ネビュラ風・0.3x視差）
+  const cloudDefs = [
+    {x: 150, y: 55, w: 180, h: 55}, {x: 480, y: 38, w: 220, h: 65},
+    {x: 780, y: 70, w: 160, h: 50}, {x: 1100, y: 45, w: 200, h: 58},
+    {x: 1450, y: 60, w: 170, h: 52},
+  ];
+  for (const c of cloudDefs) {
+    const cx = ((c.x - cameraX * 0.3) % (canvas.width + c.w) + canvas.width + c.w) % (canvas.width + c.w) - c.w / 2;
+    ctx.fillStyle = 'rgba(140,80,255,0.12)';
+    ctx.beginPath(); ctx.ellipse(cx, c.y, c.w / 2, c.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(200,160,255,0.08)';
+    ctx.beginPath(); ctx.ellipse(cx - c.w * 0.22, c.y + c.h * 0.1, c.w * 0.38, c.h * 0.48, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + c.w * 0.22, c.y + c.h * 0.1, c.w * 0.38, c.h * 0.48, 0, 0, Math.PI * 2); ctx.fill();
   }
 }
 
@@ -368,12 +417,47 @@ function render() {
 
   // プラットフォーム
   for (const p of platforms) {
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-    // 草テクスチャ風上辺
     if (p.h > 20) {
-      ctx.fillStyle = '#2ecc71';
-      ctx.fillRect(p.x, p.y, p.w, 6);
+      // 地面 — 土ボディ
+      ctx.fillStyle = '#4a2c0a';
+      ctx.fillRect(p.x, p.y + 9, p.w, p.h - 9);
+      ctx.fillStyle = '#6b3d12';
+      ctx.fillRect(p.x, p.y + 9, p.w, 4);
+      // 草の層
+      ctx.fillStyle = '#2e7d32';
+      ctx.fillRect(p.x, p.y, p.w, 10);
+      ctx.fillStyle = '#66bb6a';
+      ctx.fillRect(p.x, p.y, p.w, 4);
+      // 草の葉
+      ctx.fillStyle = '#43a047';
+      for (let gx = p.x + 6; gx < p.x + p.w - 4; gx += 14) {
+        ctx.beginPath();
+        ctx.moveTo(gx, p.y);
+        ctx.lineTo(gx - 3, p.y - 6);
+        ctx.lineTo(gx + 3, p.y - 6);
+        ctx.closePath();
+        ctx.fill();
+      }
+    } else {
+      // 空中ブロック — グラデーション紫
+      const pg = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+      pg.addColorStop(0,   '#ce93d8');
+      pg.addColorStop(0.4, '#9c27b0');
+      pg.addColorStop(1,   '#6a0080');
+      ctx.fillStyle = pg;
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      // 上端ハイライト
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillRect(p.x, p.y, p.w, 3);
+      // 下端シャドウ
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(p.x, p.y + p.h - 2, p.w, 2);
+      // ブロック区切り線
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.lineWidth = 1;
+      for (let bx = p.x + 30; bx < p.x + p.w; bx += 30) {
+        ctx.beginPath(); ctx.moveTo(bx, p.y + 1); ctx.lineTo(bx, p.y + p.h - 1); ctx.stroke();
+      }
     }
   }
 
