@@ -93,25 +93,119 @@ const player = {
   draw() {
     if (this.invincible > 0 && Math.floor(this.invincible / 5) % 2 === 0) return;
     const sx = this.x - cameraX;
+    const cx = sx + this.w / 2;   // キャラ中心X
+    const top = this.y;
+
     ctx.save();
-    if (!this.facingRight) { ctx.scale(-1, 1); ctx.translate(-canvas.width, 0); }
-    const drawX = this.facingRight ? sx : canvas.width - sx - this.w;
-    // 胴体
+    if (!this.facingRight) {
+      ctx.translate(cx * 2, 0);
+      ctx.scale(-1, 1);
+    }
+
+    const legOffset = [0, 5, 0, -5][this.frame] ?? 0;
+    const bobY = this.onGround && this.vx !== 0 ? Math.abs(legOffset) * 0.3 : 0;
+
+    // --- 左脚 ---
+    ctx.fillStyle = '#5b3fa0';
+    ctx.beginPath();
+    ctx.roundRect(cx - 13, top + 26 + bobY, 10, 16 + legOffset, 3);
+    ctx.fill();
+    // 左靴
     ctx.fillStyle = '#e74c3c';
-    ctx.fillRect(drawX, this.y, this.w, this.h);
-    // 顔
-    ctx.fillStyle = '#f39c12';
-    ctx.fillRect(drawX + 4, this.y + 4, this.w - 8, 16);
-    // 目
+    ctx.beginPath();
+    ctx.roundRect(cx - 15, top + 40 + bobY + legOffset, 13, 7, 3);
+    ctx.fill();
+
+    // --- 右脚 ---
+    ctx.fillStyle = '#5b3fa0';
+    ctx.beginPath();
+    ctx.roundRect(cx + 3, top + 26 + bobY, 10, 16 - legOffset, 3);
+    ctx.fill();
+    // 右靴
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.roundRect(cx + 1, top + 40 + bobY - legOffset, 13, 7, 3);
+    ctx.fill();
+
+    // --- 胴体（ワンピース風） ---
+    ctx.fillStyle = '#ff85a2';
+    ctx.beginPath();
+    ctx.roundRect(cx - 13, top + 14 + bobY, 26, 18, 5);
+    ctx.fill();
+    // 襟
     ctx.fillStyle = '#fff';
-    ctx.fillRect(drawX + 8, this.y + 8, 6, 6);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(drawX + 10, this.y + 10, 3, 3);
-    // 脚アニメ
-    const legOffset = [0, 4, 0, -4][this.frame] ?? 0;
-    ctx.fillStyle = '#2980b9';
-    ctx.fillRect(drawX + 2,      this.y + this.h - 12, 10, 12 + legOffset);
-    ctx.fillRect(drawX + this.w - 12, this.y + this.h - 12, 10, 12 - legOffset);
+    ctx.beginPath();
+    ctx.arc(cx, top + 15 + bobY, 5, Math.PI, 0);
+    ctx.fill();
+
+    // --- 左腕 ---
+    const armSwing = this.onGround ? legOffset * 0.6 : 0;
+    ctx.fillStyle = '#ffc5a1';
+    ctx.save();
+    ctx.translate(cx - 14, top + 17 + bobY);
+    ctx.rotate((armSwing * Math.PI) / 180);
+    ctx.beginPath();
+    ctx.roundRect(-4, 0, 8, 13, 3);
+    ctx.fill();
+    ctx.restore();
+
+    // --- 右腕 ---
+    ctx.fillStyle = '#ffc5a1';
+    ctx.save();
+    ctx.translate(cx + 14, top + 17 + bobY);
+    ctx.rotate((-armSwing * Math.PI) / 180);
+    ctx.beginPath();
+    ctx.roundRect(-4, 0, 8, 13, 3);
+    ctx.fill();
+    ctx.restore();
+
+    // --- 頭 ---
+    ctx.fillStyle = '#ffc5a1';
+    ctx.beginPath();
+    ctx.arc(cx, top + 9, 13, 0, Math.PI * 2);
+    ctx.fill();
+
+    // --- 髪 (お団子ツインテール) ---
+    ctx.fillStyle = '#c0392b';
+    // 左お団子
+    ctx.beginPath();
+    ctx.arc(cx - 10, top, 6, 0, Math.PI * 2);
+    ctx.fill();
+    // 右お団子
+    ctx.beginPath();
+    ctx.arc(cx + 10, top, 6, 0, Math.PI * 2);
+    ctx.fill();
+    // 前髪
+    ctx.beginPath();
+    ctx.ellipse(cx, top + 2, 12, 7, 0, Math.PI, 0);
+    ctx.fill();
+
+    // --- 目（大きなキラキラ目） ---
+    // 白目
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(cx - 5, top + 9, 4, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + 5, top + 9, 4, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+    // 黒目
+    ctx.fillStyle = '#1a1a2e';
+    ctx.beginPath(); ctx.arc(cx - 5, top + 9, 2.8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 5, top + 9, 2.8, 0, Math.PI * 2); ctx.fill();
+    // キラキラ
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(cx - 4, top + 8, 1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 6, top + 8, 1, 0, Math.PI * 2); ctx.fill();
+
+    // --- ほっぺ ---
+    ctx.fillStyle = 'rgba(255, 150, 150, 0.5)';
+    ctx.beginPath(); ctx.ellipse(cx - 8, top + 13, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + 8, top + 13, 3.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+
+    // --- 口（笑顔） ---
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, top + 13, 3, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
     ctx.restore();
   }
 };
