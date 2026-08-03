@@ -614,7 +614,9 @@ function startGame() {
 function endGame(won) {
   gameState = 'over';
   cancelAnimationFrame(animFrame);
-  overlayTitle.textContent = won ? '🎉 クリア！' : 'ゲームオーバー';
+  overlay.classList.toggle('won',  won);
+  overlay.classList.toggle('lost', !won);
+  overlayTitle.textContent = won ? '🎉 クリア！' : 'GAME OVER';
   overlayScore.textContent = `スコア: ${score} 点`;
   overlay.classList.remove('hidden');
 }
